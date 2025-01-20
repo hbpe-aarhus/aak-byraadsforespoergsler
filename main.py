@@ -1,5 +1,3 @@
-# TODO: generate requirements.txt
-
 import os
 import secrets
 import time
