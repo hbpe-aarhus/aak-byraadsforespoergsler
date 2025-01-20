@@ -22,13 +22,14 @@ def desired_url_pattern(url_to_check: str):
 
 
 def download_pdf(yearly_dir: str, url: str):
-    """Download a PDF from a URL and save it using the unique ID contained in the URL as its filename."""
+    """Download a document from a URL and save it using the unique ID contained in the URL as its filename."""
     response = requests.get(url, headers=get_headers())
     response.raise_for_status()
-    match = re.search(r'\/media\/(.+)\/(.+)\.pdf', url)
+    match = re.search(r'\/media\/(.+)\/(.+)\.(.+)\?', url)
     unique_id = match.group(1)
     filename = match.group(2)
-    target_file = os.path.join(yearly_dir, f"{filename}_{unique_id}.pdf")
+    extension = match.group(3)
+    target_file = os.path.join(yearly_dir, f"{filename}_{unique_id}.{extension}")
     with open(target_file, "wb") as file:
         file.write(response.content)
 
