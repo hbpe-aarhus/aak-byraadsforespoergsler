@@ -1,4 +1,5 @@
 import os
+from random import randint
 import re
 import time
 
@@ -45,7 +46,7 @@ def main():
         if desired_url_pattern(anchor["href"])
     ]
 
-    for year_link in year_links[1:]:
+    for year_link in year_links:
         logger.info(f'Processing {year_link}')
         yearly_dir = year_link.split('/')[-1]
         os.makedirs(yearly_dir, exist_ok=True)
@@ -92,7 +93,7 @@ def main():
             # Extract and download associated documents
             documents = question_soup.select(".list__downloads .list__link")
             for document in documents:
-                time.sleep(2)  # Be polite with requests to avoid resetting the connection
+                time.sleep(randint(2, 4))  # Be polite with requests to avoid resetting the connection
                 download_url = f"https://aarhus.dk{document.get('href')}"  # noqa: E231
                 logger.info(f'Downloading from URL: {download_url}')
                 download_pdf(target_dir, download_url)
