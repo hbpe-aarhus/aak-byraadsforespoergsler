@@ -4,9 +4,9 @@ import os
 import secrets
 import time
 
+from bs4 import BeautifulSoup
 from loguru import logger
 import requests
-from bs4 import BeautifulSoup
 
 
 def desired_url_pattern(url_to_check: str):
