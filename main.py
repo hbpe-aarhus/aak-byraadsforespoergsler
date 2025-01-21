@@ -1,7 +1,5 @@
 import os
-from random import randint
 import re
-import time
 
 from bs4 import BeautifulSoup
 from loguru import logger
@@ -92,7 +90,6 @@ def process_question_link(yearly_dir: str, question_link: str):
 
     documents = soup.select(".list__downloads .list__link")
     for document in documents:
-        time.sleep(randint(2, 4))
         download_url = f"https://aarhus.dk{document.get('href')}"
         logger.info(f"Downloading document: {download_url}")
         download_file(question_dir, download_url)
