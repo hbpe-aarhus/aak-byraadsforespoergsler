@@ -9,95 +9,110 @@ import requests
 
 
 def get_headers():
+    """Return headers for HTTP requests."""
     return {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0",
         "Accept-Encoding": "*",
-        "Connection": "keep-alive"
+        "Connection": "keep-alive",
     }
 
 
-def desired_url_pattern(url_to_check: str):
+# fmt: off
+def is_desired_url(url: str) -> bool:
     """Check if the URL matches the desired pattern."""
-    return "/demokrati/politik/byraadet/spoergsmaal-fra-byraadets-medlemmer/spoergsmaal-fra-byraadets-medlemmer" in url_to_check
+    return "/demokrati/politik/byraadet/spoergsmaal-fra-byraadets-medlemmer/spoergsmaal-fra-byraadets-medlemmer" in url
+# fmt: on
 
 
-def download_pdf(yearly_dir: str, url: str):
-    """Download a document from a URL and save it using the unique ID contained in the URL as its filename."""
+def download_file(directory: str, url: str):
+    """Download a file from a URL and save it in the specified directory."""
     response = requests.get(url, headers=get_headers(), timeout=10)
     response.raise_for_status()
-    match = re.search(r'\/media\/(.+)\/(.+)\.(.+)\?', url)
-    unique_id = match.group(1)
-    filename = match.group(2)
-    extension = match.group(3)
-    target_file = os.path.join(yearly_dir, f"{filename}_{unique_id}.{extension}")
+
+    match = re.search(r"\/media\/(.+)\/(.+)\.(.+)\?", url)
+
+    unique_id, filename, extension = match.groups()
+    target_file = os.path.join(directory, f"{filename}_{unique_id}.{extension}")
+
     with open(target_file, "wb") as file:
         file.write(response.content)
 
+    logger.info(f"Downloaded file: {target_file}")
+
+
+def process_year_link(year_link: str):
+    """Process a yearly link to extract and download associated documents."""
+    logger.info(f"Processing year link: {year_link}")
+    yearly_dir = os.path.basename(year_link.rstrip("/"))
+    os.makedirs(yearly_dir, exist_ok=True)
+
+    response = requests.get(year_link, headers=get_headers(), timeout=10)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    page_id = soup.find("meta", {"name": "pageId"}).get("content")
+    api_url = "https://aarhus.dk/umbraco/surface/list/PaginationListItem"
+    request_data = {
+        "pageId": page_id,
+        "dontsortbydate": "False",
+        "page": 1,
+        "pageSize": 1000,
+        "year": "",
+        "month": "",
+        "tag": "",
+        "lang": "da",
+        "showDate": "True",
+    }
+
+    api_response = requests.get(
+        api_url, params=request_data, headers=get_headers(), timeout=10
+    )
+    api_response.raise_for_status()
+    api_soup = BeautifulSoup(api_response.text, "html.parser")
+
+    question_links = [
+        f"https://aarhus.dk/{anchor['href']}"
+        for anchor in api_soup.find_all("a")
+        if is_desired_url(anchor.get("href", ""))
+    ]
+
+    for question_link in question_links:
+        process_question_link(yearly_dir, question_link)
+
+
+def process_question_link(yearly_dir: str, question_link: str):
+    """Process an individual question link to download its documents."""
+    logger.info(question_link)
+    question_dir = os.path.join(yearly_dir, os.path.basename(question_link.rstrip("/")))
+    os.makedirs(question_dir, exist_ok=True)
+
+    response = requests.get(question_link, headers=get_headers(), timeout=10)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    documents = soup.select(".list__downloads .list__link")
+    for document in documents:
+        time.sleep(randint(2, 4))
+        download_url = f"https://aarhus.dk{document.get('href')}"
+        logger.info(f"Downloading document: {download_url}")
+        download_file(question_dir, download_url)
+
 
 def main():
+    """Main function to scrape and process data."""
     base_url = "https://aarhus.dk/demokrati/politik/byraadet/spoergsmaal-fra-byraadets-medlemmer"
     response = requests.get(base_url, headers=get_headers(), timeout=10)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
 
-    # Extract links to yearly questions
     year_links = [
         f"https://aarhus.dk/{anchor['href']}"
         for anchor in soup.find_all("a", class_="link-box link-box__article")
-        if desired_url_pattern(anchor["href"])
+        if is_desired_url(anchor.get("href", ""))
     ]
 
     for year_link in year_links:
-        logger.info(f'Processing {year_link}')
-        yearly_dir = year_link.split('/')[-1]
-        os.makedirs(yearly_dir, exist_ok=True)
-        year_response = requests.get(year_link, headers=get_headers(), timeout=10)
-        year_response.raise_for_status()
-        year_soup = BeautifulSoup(year_response.text, "html.parser")
-
-        # Extract the page ID for API requests
-        page_id = year_soup.find("meta", {"name": "pageId"}).get("content")
-        request_data = {
-            "pageId": page_id,
-            "dontsortbydate": "False",
-            "page": 1,
-            "pageSize": 1000,  # Note: If we have more than 1000 questions in a given year, we will not retrieve all questions (this has so far not been the case...)
-            "year": "",
-            "month": "",
-            "tag": "",
-            "lang": "da",
-            "showDate": "True",
-        }
-
-        # Fetch the API response
-        api_url = "https://aarhus.dk/umbraco/surface/list/PaginationListItem"
-        api_response = requests.get(api_url, params=request_data, headers=get_headers(), timeout=10)
-        api_response.raise_for_status()
-        api_soup = BeautifulSoup(api_response.text, "html.parser")
-
-        # Extract links to individual questions
-        question_links = [
-            f"https://aarhus.dk/{anchor['href']}"
-            for anchor in api_soup.find_all("a")
-            if desired_url_pattern(anchor["href"])
-        ]
-
-        for question_link in question_links:
-            logger.info(question_link)
-            question_dir = question_link.split('/')[-1]
-            target_dir = os.path.join(yearly_dir, question_dir)
-            os.makedirs(target_dir, exist_ok=True)
-            question_response = requests.get(question_link, headers=get_headers(), timeout=10)
-            question_response.raise_for_status()
-            question_soup = BeautifulSoup(question_response.text, "html.parser")
-
-            # Extract and download associated documents
-            documents = question_soup.select(".list__downloads .list__link")
-            for document in documents:
-                time.sleep(randint(2, 4))  # Be polite with requests to avoid resetting the connection
-                download_url = f"https://aarhus.dk{document.get('href')}"  # noqa: E231
-                logger.info(f'Downloading from URL: {download_url}')
-                download_pdf(target_dir, download_url)
+        process_year_link(year_link)
 
 
 if __name__ == "__main__":
