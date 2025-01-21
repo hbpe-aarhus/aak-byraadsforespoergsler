@@ -23,7 +23,7 @@ def desired_url_pattern(url_to_check: str):
 
 def download_pdf(yearly_dir: str, url: str):
     """Download a document from a URL and save it using the unique ID contained in the URL as its filename."""
-    response = requests.get(url, headers=get_headers())
+    response = requests.get(url, headers=get_headers(), timeout=10)
     response.raise_for_status()
     match = re.search(r'\/media\/(.+)\/(.+)\.(.+)\?', url)
     unique_id = match.group(1)
@@ -36,7 +36,7 @@ def download_pdf(yearly_dir: str, url: str):
 
 def main():
     base_url = "https://aarhus.dk/demokrati/politik/byraadet/spoergsmaal-fra-byraadets-medlemmer"
-    response = requests.get(base_url, headers=get_headers())
+    response = requests.get(base_url, headers=get_headers(), timeout=10)
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
 
@@ -51,7 +51,7 @@ def main():
         logger.info(f'Processing {year_link}')
         yearly_dir = year_link.split('/')[-1]
         os.makedirs(yearly_dir, exist_ok=True)
-        year_response = requests.get(year_link, headers=get_headers())
+        year_response = requests.get(year_link, headers=get_headers(), timeout=10)
         year_response.raise_for_status()
         year_soup = BeautifulSoup(year_response.text, "html.parser")
 
@@ -71,7 +71,7 @@ def main():
 
         # Fetch the API response
         api_url = "https://aarhus.dk/umbraco/surface/list/PaginationListItem"
-        api_response = requests.get(api_url, params=request_data, headers=get_headers())
+        api_response = requests.get(api_url, params=request_data, headers=get_headers(), timeout=10)
         api_response.raise_for_status()
         api_soup = BeautifulSoup(api_response.text, "html.parser")
 
@@ -87,7 +87,7 @@ def main():
             question_dir = question_link.split('/')[-1]
             target_dir = os.path.join(yearly_dir, question_dir)
             os.makedirs(target_dir, exist_ok=True)
-            question_response = requests.get(question_link, headers=get_headers())
+            question_response = requests.get(question_link, headers=get_headers(), timeout=10)
             question_response.raise_for_status()
             question_soup = BeautifulSoup(question_response.text, "html.parser")
 
