@@ -36,4 +36,5 @@ repos:
     rev: v1.15.0
     hooks:
       - id: mypy
-        args: ["--cache-fine-grained", "--ignore-missing-imports"]
+        args: ["--ignore-missing-imports"]
+        additional_dependencies: ["types-requests"]
