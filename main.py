@@ -29,7 +29,7 @@ def download_file(directory: str, url: str):
 
     match = re.search(r"\/media\/(.+)\/(.+)\.(.+)\?", url)
 
-    unique_id, filename, extension = match.groups()
+    unique_id, filename, extension = match.groups()  # type: ignore
     target_file = os.path.join(directory, f"{filename}_{unique_id}.{extension}")
 
     with open(target_file, "wb") as file:
@@ -48,7 +48,7 @@ def process_year_link(year_link: str):
     response.raise_for_status()
     soup = BeautifulSoup(response.text, "html.parser")
 
-    page_id = soup.find("meta", {"name": "pageId"}).get("content")
+    page_id = soup.find("meta", {"name": "pageId"}).get("content")  # type: ignore
     api_url = "https://aarhus.dk/umbraco/surface/list/PaginationListItem"
     request_data = {
         "pageId": page_id,
