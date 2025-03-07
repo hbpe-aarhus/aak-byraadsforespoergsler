@@ -1,3 +1,7 @@
+"""
+This script downloads all 'byrådsforespørgsler' made by members of The Aarhus City Council (Aarhus Byråd).
+"""
+
 from pathlib import Path
 import re
 
