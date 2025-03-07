@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=65.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aak-byraadsforespoergsler"
+version = "0.0.1"
+authors = [
+  { name="Peter Bartram Hansen", email="hbpe@aarhus.dk" },
+]
+readme = "README.md"
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+]
+dependencies = [
+    "beautifulsoup4 >= 4.13.3, < 5.0",
+    "loguru >= 0.7.3, < 1.0",
+    "requests >= 2.32.3, < 3.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pylint",
+  "flake8",
+]
