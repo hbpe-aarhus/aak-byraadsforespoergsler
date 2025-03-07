@@ -1,0 +1,29 @@
+name: Linting
+
+on: [push, pull_request]
+jobs:
+  uv-example:
+    name: python
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install Python
+        run: uv python install 3.12
+
+      - name: Install the project
+        run: uv sync --all-extras --dev
+
+      - name: Lint with pylint
+        run: |
+          uv run pylint --rcfile=.pylintrc $(git ls-files '*.py')
+
+      - name: Install pre-commit and run hooks
+        run: |
+          uv pip install pre-commit
+          uv run pre-commit install
+          uv run pre-commit run --all-files
