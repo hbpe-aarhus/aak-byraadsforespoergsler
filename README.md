@@ -9,7 +9,7 @@ Downloads PDF's from all "10-dages forespoergsler" made in the city council of A
 To run this project, make sure you have the following installed:
 
 - **Python** (tested and working with version 3.12)
-- Required dependencies (listed in `requirements.txt`)
+- Required dependencies (listed in `pyproject.toml`)
 
 ---
 
@@ -27,7 +27,7 @@ Follow these steps to set up the project on your local machine:
    source env/bin/activate  # Windows: .\env\Scripts\activate
 3. Install dependencies
    ```bash
-   pip install -r requirements.txt
+   pip install .
 
 ## Running the Script
 Simply run the main script with:
