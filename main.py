@@ -1,3 +1,7 @@
+"""
+This script downloads all 'byrådsforespørgsler' made by members of The Aarhus City Council (Aarhus Byråd).
+"""
+
 import os
 import re
 
